@@ -1,6 +1,6 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg)
 
-# Neurocore
+# Neurocore 
 
 - [Read the documentation for project](docs/info.md)
 
