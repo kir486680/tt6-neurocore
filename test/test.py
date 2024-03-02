@@ -35,7 +35,7 @@ async def test_neural_chip(dut):
     # Optionally wait for the transmit operation to complete
     await uart_source.wait()
 
-    load = dut.uo_out[7:2].value
+    load = dut.uo_out.value
     print(f"Load: {load}")
 
 
