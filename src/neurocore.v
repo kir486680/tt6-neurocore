@@ -50,7 +50,7 @@ module NeuralChip (
         if (!RESET) begin
             current_mul_state <= IDLE_MUL;
             send_data <= 0;  // Reset send_data on RESET
-            load_arr <= 0;
+            load_arr = 0;
         end
         else begin
             current_mul_state <= next_mul_state;
@@ -164,7 +164,7 @@ module NeuralChip (
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
                     state_receive <= RECEIVE_BR1_HIGH;
-                    load_arr <=1;
+                    load_arr =1;
                  
                 end
             end
