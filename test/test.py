@@ -1,38 +1,42 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, NextTimeStep
+from cocotb.triggers import ClockCycles, RisingEdge
 
 @cocotb.test()
 async def test_neural_chip(dut):
     dut._log.info("Start of test")
 
     # Setup clock
-    clock = Clock(dut.clk, 10, units="us")  # Adjust the clock period as necessary
+    clock_frequency = 20_000_000  # 20 MHz
+    baud_rate = 9600  # Baud rate for data transmission
+    clock_period_ns = 1_000_000_000 / clock_frequency  # Clock period in nanoseconds
+    clock = Clock(dut.clk, clock_period_ns, units="ns")
     cocotb.start_soon(clock.start())
+
+    cycles_per_bit = clock_frequency / baud_rate  # Calculate cycles per bit
 
     # Reset
     dut._log.info("Resetting")
     dut.ena.value = 1
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)  # Wait for a few cycles to ensure reset
+    await ClockCycles(dut.clk, int(cycles_per_bit))
     dut.rst_n.value = 1
-    await ClockCycles(dut.clk, 10)  # Wait for reset to propagate
 
-    # Define the 8-bit numbers to send, one bit at a time
-    input_values = [0xFE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]  # Example 8-bit numbers
+    # Define the 8-bit numbers to send
+    input_values = [0xFE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
 
-    dut._log.info("Sending data to the NeuralChip, one bit at a time")
+    dut._log.info("Sending data at 9600 baud")
     for value in input_values:
-        # Send each bit of the 8-bit value
+        # Send each bit of the 8-bit value, LSB first
         for bit_position in range(8):
             bit_value = (value >> bit_position) & 1
-            dut.ui_in[0].value = bit_value  # Sending one bit at a time through RXD (ui_in[0])
-            await ClockCycles(dut.clk, 1)  # Wait one clock cycle between each bit
+            dut.ui_in[0].value = bit_value
+            await ClockCycles(dut.clk, int(cycles_per_bit))  # Wait calculated cycles between bits
 
-    # Wait an additional clock cycle after all data is sent
-    await ClockCycles(dut.clk, 1)
+    # Wait an additional period to process the last bit
+    await ClockCycles(dut.clk, int(cycles_per_bit))
 
-    # Manually check if MULT_DONE signal (uo_out[1]) is asserted
+    # Manual check for MULT_DONE signal
     dut._log.info("Checking for MULT_DONE signal on uo_out[1]")
     mult_done_status = dut.uo_out[1].value
     assert mult_done_status == 1, "Multiply operation did not complete as expected."
