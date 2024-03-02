@@ -6,7 +6,7 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
-    output 	     LOAD,         // UART transmit
+    output 	     load_arr,         // UART transmit
     output       MULT_DONE // multiply within the block is done
     );
 
@@ -16,7 +16,7 @@ module NeuralChip (
     reg start, load;
     wire block_multiply_done;
     assign MULT_DONE = block_multiply_done;
-    assign LOAD = load;
+    assign load_arr = load;
 
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
