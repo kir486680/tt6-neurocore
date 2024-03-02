@@ -5,7 +5,8 @@ module NeuralChip (
     input 	     CLK, // system clock 
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
-    output 	     TXD         // UART transmit
+    output 	     TXD,         // UART transmit
+    output       MULT_DONE // multiply within the block is done
     );
 
     wire [4:0] count;
@@ -13,6 +14,8 @@ module NeuralChip (
     wire [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
     reg start, load;
     wire block_multiply_done;
+    assign MULT_DONE = block_multiply_done;
+
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
          .block_a2(block_a2),

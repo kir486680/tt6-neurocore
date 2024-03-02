@@ -29,11 +29,10 @@ async def test_neural_chip(dut):
             dut.ui_in[0].value = bit_value  # Sending one bit at a time through RXD (ui_in[0])
             await ClockCycles(dut.clk, 1)  # Wait one clock cycle between each bit
 
-    # Wait for the NeuralChip to signal completion
-    dut._log.info("Waiting for block_multiply_done signal")
-    await RisingEdge(dut.neural_chip_inst.block_multiply_done)
+    dut._log.info("Waiting for MULT_DONE signal on uo_out[1]")
+    await RisingEdge(dut.uo_out[1])  # Wait for the MULT_DONE signal to indicate completion
 
-    # Check if block_multiply_done signal is asserted
-    assert dut.neural_chip_inst.block_multiply_done.value == 1, "Multiply operation did not complete as expected."
+    # Check if MULT_DONE signal is asserted
+    assert dut.uo_out[1].value == 1, "Multiply operation did not complete as expected."
 
     dut._log.info("Test completed successfully")
