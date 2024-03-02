@@ -32,7 +32,8 @@ async def test_neural_chip(dut):
             bit_value = (value >> bit_position) & 1
             dut.ui_in[0].value = bit_value
             await ClockCycles(dut.clk, int(cycles_per_bit))  # Wait calculated cycles between bits
-
+        load = dut.uo_out[2].value
+        print(f"Load: {load}")
     # Wait an additional period to process the last bit
     await ClockCycles(dut.clk, int(cycles_per_bit))
 
