@@ -164,7 +164,7 @@ module NeuralChip (
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
                     state_receive <= RECEIVE_BR1_HIGH;
-                    load_arr <=1;
+            
                  
                 end
             end
