@@ -6,7 +6,7 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
-    output 	     load_arr,         // UART transmit
+    output 	     load_arr[5:0],         // UART transmit
     output       MULT_DONE // multiply within the block is done
     );
 
@@ -16,7 +16,7 @@ module NeuralChip (
     reg start, load;
     wire block_multiply_done;
     assign MULT_DONE = block_multiply_done;
-    assign load_arr = load;
+
 
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
@@ -50,7 +50,7 @@ module NeuralChip (
         if (!RESET) begin
             current_mul_state <= IDLE_MUL;
             send_data <= 0;  // Reset send_data on RESET
-            
+            load <= 0;
         end
         else begin
             current_mul_state <= next_mul_state;
@@ -70,7 +70,7 @@ module NeuralChip (
         next_mul_state = IDLE_MUL;
          case (current_mul_state)
              IDLE_MUL: begin
-                 if (state_receive == RECEIVE_BR1_HIGH) begin
+                 if (state_receive == DONE_RECEIVE) begin
                      next_mul_state = LOAD;
                  end else begin
                      next_mul_state = IDLE_MUL;
@@ -84,7 +84,7 @@ module NeuralChip (
                  // Other LOAD state logic
              end
              START: begin
-                    //load = 0;
+                    load = 0;
                     start = 1;
                  if (block_multiply_done) begin 
                      next_mul_state = DONE_MUL;
@@ -143,6 +143,7 @@ module NeuralChip (
     DONE_RECEIVE = 17;
     //now need to keep track of the state of the data that is being received
     reg [5:0] state_receive = IDLE;
+    assign load_arr = state_receive;
    
     always @(posedge CLK) begin
         if (!RESET) begin
@@ -164,7 +165,6 @@ module NeuralChip (
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
                     state_receive <= RECEIVE_BR1_HIGH;
-            
                  
                 end
             end
