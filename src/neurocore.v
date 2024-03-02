@@ -6,7 +6,7 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
-    output 	     load_arr[5:0],         // UART transmit
+    output [5:0] load_arr,         // UART transmit
     output       MULT_DONE // multiply within the block is done
     );
 
