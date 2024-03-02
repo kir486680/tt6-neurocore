@@ -20,7 +20,7 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
         .RESET(rst_n),
         .RXD(ui_in[0]),
         .TXD(uo_out[0]),
-        .MULT_DONE(uo_out[1]),
+        .MULT_DONE(uo_out[1])
     );
 
     // All output pins must be assigned. If not used, assign to 0.
