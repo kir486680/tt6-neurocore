@@ -31,7 +31,7 @@ async def test_neural_chip(dut):
 
     dut._log.info("Sending data via UART")
     # Convert input values to bytes and send via UART
-    await uart_source.send(bytes(input_values))
+    await uart_source.write(bytes(input_values))
     # Optionally wait for the transmit operation to complete
     await uart_source.wait()
 
