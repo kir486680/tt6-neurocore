@@ -1,45 +1,34 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles
+from cocotbext.uart import UartSource, UartSink
 
 @cocotb.test()
-async def test_neural_chip(dut):
-    dut._log.info("Start of test")
+async def test_neural_chip_uart(dut):
+    dut._log.info("Start of UART test")
 
-    # Setup clock
-    clock_frequency = 20_000_000  # 20 MHz
-    baud_rate = 9600  # Baud rate for data transmission
-    clock_period_ns = 1_000_000_000 / clock_frequency  # Clock period in nanoseconds
-    clock = Clock(dut.clk, clock_period_ns, units="ns")
+    # Setup clock (adjust the period to match your design's clock)
+    clock = Clock(dut.clk, 10, units="ns")  # Example for a 100MHz clock
     cocotb.start_soon(clock.start())
 
-    cycles_per_bit = clock_frequency / baud_rate  # Calculate cycles per bit
+    # Initialize UART source and sink
+    uart_source = UartSource(dut.ui_in[0], baud=9600, bits=8)
+    uart_sink = UartSink(dut.uo_out[0], baud=9600, bits=8)
 
-    # Reset
-    dut._log.info("Resetting")
-    dut.ena.value = 1
+    # Reset your DUT (adjust according to your DUT's reset logic)
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, int(cycles_per_bit))
+    await ClockCycles(dut.clk, 10)  # Wait enough cycles for reset to take effect
     dut.rst_n.value = 1
 
-    # Define the 8-bit numbers to send
-    input_values = [0xFE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0xFF]
+    # Send data to the DUT using the UART source
+    test_data = b'test data'
+    await uart_source.write(test_data)
+    await uart_source.wait()  # Wait for the transmit operation to complete
 
-    dut._log.info("Sending data at 9600 baud")
-    for value in input_values:
-        # Send each bit of the 8-bit value, LSB first
-        for bit_position in range(8):
-            bit_value = (value >> bit_position) & 1
-            dut.ui_in[0].value = bit_value
-            await ClockCycles(dut.clk, int(cycles_per_bit))  # Wait calculated cycles between bits
-        load = dut.uo_out[2].value
-        print(f"Load: {load}")
-    # Wait an additional period to process the last bit
-    await ClockCycles(dut.clk, int(cycles_per_bit))
+    # Receive data from the DUT using the UART sink
+    received_data = await uart_sink.read(len(test_data))  # Attempt to read back the sent data
 
-    # Manual check for MULT_DONE signal
-    dut._log.info("Checking for MULT_DONE signal on uo_out[1]")
-    mult_done_status = dut.uo_out[1].value
-    assert mult_done_status == 1, "Multiply operation did not complete as expected."
+    # Compare the sent and received data
+    assert test_data == received_data, f"Data mismatch: sent {test_data}, received {received_data}"
 
-    dut._log.info("Test completed successfully")
+    dut._log.info("UART test completed successfully")

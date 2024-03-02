@@ -21,6 +21,7 @@ jobs:
         shell: bash
         run: |
           pip install cocotb~=1.8.0
+          pip install cocotbext-uart
           cocotb-config --libpython
           cocotb-config --python-bin
 
