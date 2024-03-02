@@ -32,7 +32,6 @@ module NeuralChip (
          .block_result2(block_result2),
          .block_result3(block_result3),
          .block_result4(block_result4)
-            //.LEDS(LEDS)
      );
 
      reg send_data =0;
