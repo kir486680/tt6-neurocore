@@ -24,7 +24,7 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
     );
 
     // All output pins must be assigned. If not used, assign to 0.
-    assign uo_out[7:2] = 7'b0;
+    assign uo_out[7:2] = 6'b0;
     assign uio_out = 8'b0;     // Assign uio_out to 0 as it's not used for output
     assign uio_oe = 8'b0;      // Assign uio_oe to 0 to configure uio pins as input or disable them for output
 

@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, NextTimeStep
 
 @cocotb.test()
 async def test_neural_chip(dut):
@@ -19,7 +19,7 @@ async def test_neural_chip(dut):
     await ClockCycles(dut.clk, 10)  # Wait for reset to propagate
 
     # Define the 8-bit numbers to send, one bit at a time
-    input_values = [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]  # Example 8-bit numbers
+    input_values = [0xFE, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]  # Example 8-bit numbers
 
     dut._log.info("Sending data to the NeuralChip, one bit at a time")
     for value in input_values:
@@ -29,10 +29,12 @@ async def test_neural_chip(dut):
             dut.ui_in[0].value = bit_value  # Sending one bit at a time through RXD (ui_in[0])
             await ClockCycles(dut.clk, 1)  # Wait one clock cycle between each bit
 
-    dut._log.info("Waiting for MULT_DONE signal on uo_out[1]")
-    await RisingEdge(dut.uo_out[1])  # Wait for the MULT_DONE signal to indicate completion
+    # Wait an additional clock cycle after all data is sent
+    await ClockCycles(dut.clk, 1)
 
-    # Check if MULT_DONE signal is asserted
-    assert dut.uo_out[1].value == 1, "Multiply operation did not complete as expected."
+    # Manually check if MULT_DONE signal (uo_out[1]) is asserted
+    dut._log.info("Checking for MULT_DONE signal on uo_out[1]")
+    mult_done_status = dut.uo_out[1].value
+    assert mult_done_status == 1, "Multiply operation did not complete as expected."
 
     dut._log.info("Test completed successfully")
