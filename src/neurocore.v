@@ -39,10 +39,10 @@ module NeuralChip (
          .block_result4(block_result4)
      );
 
-     reg send_data <= 0;
+     reg send_data = 0;
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
-     reg [2:0] current_mul_state <= IDLE_MUL;
-     reg [2:0] next_mul_state <= IDLE_MUL;
+     reg [2:0] current_mul_state = IDLE_MUL;
+     reg [2:0] next_mul_state = IDLE_MUL;
      
      // Update current_mul_state and send_data in a single always block
      always @(posedge CLK) begin
@@ -70,15 +70,13 @@ module NeuralChip (
      
      // Calculate next state and send_data based on current state and inputs
      always @(*) begin
-        if (!RESET) begin
-
-            start = 1'b0;
-            load = 1'b0;
-        end
-        next_mul_state = IDLE_MUL;
+         if (!RESET) begin
+             start = 1'b0;
+             load = 1'b0;
+         end
+         next_mul_state = IDLE_MUL;
          case (current_mul_state)
              IDLE_MUL: begin
-                
                  if (state_receive == DONE_RECEIVE) begin
                      next_mul_state = LOAD;
                  end else begin
@@ -86,24 +84,23 @@ module NeuralChip (
                  end
              end
              LOAD: begin
-             
                  next_mul_state = START;
                  load = 1;
                  start = 0;
              end
              START: begin
-                    load = 0;
-                    start = 1;
-                 if (block_multiply_done) begin 
+                 load = 0;
+                 start = 1;
+                 if (block_multiply_done) begin
                      next_mul_state = DONE_MUL;
-                     //send_data = 1;
-                 end else
+                 end else begin
                      next_mul_state = START;
+                 end
                  // Other START state logic
              end
              DONE_MUL: begin
                  // DONE_MUL state logic
-                next_mul_state = IDLE_MUL;
+                 next_mul_state = IDLE_MUL;
              end
              default: next_mul_state = IDLE_MUL;
          endcase
