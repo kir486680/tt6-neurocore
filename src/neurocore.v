@@ -48,14 +48,14 @@ module NeuralChip (
      always @(posedge CLK) begin
          if (!RESET) begin
              current_mul_state <= IDLE_MUL;
-             block_a1 <= `DATA_W'd0;
-             block_a2 <= `DATA_W'd0;
-             block_a3 <= `DATA_W'd0;
-             block_a4 <= `DATA_W'd0;
-             block_b1 <= `DATA_W'd0;
-             block_b2 <= `DATA_W'd0;
-             block_b3 <= `DATA_W'd0;
-             block_b4 <= `DATA_W'd0;
+            //  block_a1 <= `DATA_W'd0;
+            //  block_a2 <= `DATA_W'd0;
+            //  block_a3 <= `DATA_W'd0;
+            //  block_a4 <= `DATA_W'd0;
+            //  block_b1 <= `DATA_W'd0;
+            //  block_b2 <= `DATA_W'd0;
+            //  block_b3 <= `DATA_W'd0;
+            //  block_b4 <= `DATA_W'd0;
              send_data <= 0;
          end else begin
              current_mul_state <= next_mul_state;
@@ -256,13 +256,6 @@ module NeuralChip (
                 if (rx_data == 8'b11111111) begin
                     state_receive <= IDLE;
                     data_processed <= 1'b1;
-                    //check if blocka1, blocka2, blocka3, blocka4 are all 0, if so, then light up LEDS[0]
-                    if(block_a1 == 0 && block_a2 == 0 && block_a3 == 0 && block_a4 == 0) begin
-                        //LEDS[0] <= 0;
-                    end
-                    else begin
-                        //LEDS[0] <= 1;
-                    end
                 end
             end
         endcase
