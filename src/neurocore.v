@@ -45,7 +45,7 @@ module NeuralChip (
      reg [2:0] next_mul_state = IDLE_MUL;
      
      // Update current_mul_state and send_data in a single always block
-     always @(posedge CLK) begin
+     always @(posedge CLK or negedge RESET) begin
          if (!RESET) begin
              current_mul_state <= IDLE_MUL;
              send_data <= 0;
@@ -65,8 +65,9 @@ module NeuralChip (
          if (!RESET) begin
              start = 1'b0;
              load = 1'b0;
+             next_mul_state = IDLE_MUL;
          end
-         next_mul_state = IDLE_MUL;
+         
          case (current_mul_state)
              IDLE_MUL: begin
                  if (state_receive == DONE_RECEIVE) begin
