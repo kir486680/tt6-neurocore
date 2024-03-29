@@ -948,58 +948,42 @@ module UART #(
 endmodule
 
 module ClockDiv #(
-    parameter FREQ_I  = 2,             // Input frequency
-    parameter FREQ_O  = 1,             // Output frequency
-    parameter PHASE   = 1'b0,          // Phase
-    parameter MAX_PPM = 1_000_000      // Maximum allowed parts per million deviation
-) (
-    input  reset,
-    input  clk_i,
-    output clk_o
-);
+        parameter FREQ_I  = 2,
+        parameter FREQ_O  = 1,
+        parameter PHASE   = 1'b0,
+        parameter MAX_PPM = 1_000_000
+    ) (
+        input  reset,
+        input  clk_i,
+        output clk_o
+    );
 
-// Calculate initial counter value, rounding up.
-localparam INIT = FREQ_I / FREQ_O / 2 - 1;
+    // This calculation always rounds frequency up.
+    localparam INIT = FREQ_I / FREQ_O / 2 - 1;
+    localparam ACTUAL_FREQ_O = FREQ_I / ((INIT + 1) * 2);
+    localparam PPM = 64'd1_000_000 * (ACTUAL_FREQ_O - FREQ_O) / FREQ_O;
+    generate
+        if(INIT < 0)
+            _ERROR_FREQ_TOO_HIGH_ error();
+        if(PPM > MAX_PPM)
+            _ERROR_FREQ_DEVIATION_TOO_HIGH_ error();
+    endgenerate
 
-// Calculate the actual output frequency based on INIT.
-localparam ACTUAL_FREQ_O = FREQ_I / ((INIT + 1) * 2);
-
-// Calculate the parts per million (PPM) deviation from the desired frequency.
-localparam PPM = 64'd1_000_000 * (ACTUAL_FREQ_O - FREQ_O) / FREQ_O;
-
-// Check for configuration errors at compile time.
-generate
-    if(INIT < 0) begin
-        _ERROR_FREQ_TOO_HIGH_ error();
-    end
-    if(PPM > MAX_PPM) begin
-        _ERROR_FREQ_DEVIATION_TOO_HIGH_ error();
-    end
-endgenerate
-
-// Calculate the number of bits required for the counter.
-localparam CNT_BITS = $clog2(INIT + 1);
-
-// Define the counter with the calculated number of bits.
-reg [CNT_BITS:0] cnt = 0;
-
-// Clock output register.
-reg clk = PHASE;
-
-always @(posedge clk_i or negedge reset) begin
-    if (!reset) begin
-        cnt <= 0;
-        clk <= PHASE;
-    end else begin
-        if (cnt == 0) begin
-            clk <= ~clk;
-            cnt <= INIT[CNT_BITS:0];  // Explicitly specify bit-width for INIT
+    reg [$clog2(INIT):0] cnt = 0;
+    reg                  clk = PHASE;
+    always @(posedge clk_i or negedge reset)
+        if(!reset) begin
+            cnt <= 0;
+            clk <= PHASE;
         end else begin
-            cnt <= cnt - 1;
+            if(cnt == 0) begin
+                clk <= ~clk;
+                cnt <= INIT;
+            end else begin
+                cnt <= cnt - 1;
+            end
         end
-    end
-end
 
-assign clk_o = clk;
+    assign clk_o = clk;
 
 endmodule
