@@ -798,6 +798,7 @@ module UART #(
             2'd0: rx_sampleno <= 2'd1;
             2'd1: rx_sampleno <= 2'd2;
             2'd2: rx_sampleno <= 2'd0;
+            default: rx_sampleno <= 2'd0;
         endcase
 
     // RX strobe generator
@@ -854,6 +855,8 @@ module UART #(
                     rx_state <= RX_IDLE;
                 else if(!rx_i)
                     rx_state <= RX_ERROR;
+            default:
+                rx_state <= RX_IDLE;
         endcase
 
     assign rx_data_o  = rx_data;
@@ -934,6 +937,8 @@ module UART #(
                     tx_sampler_reset <= 1'b0;
                     tx_state <= TX_IDLE;
                 end
+            default:
+                tx_state <= TX_IDLE;
         endcase
 
     assign tx_o       = tx_buf;
