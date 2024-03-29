@@ -11,14 +11,13 @@ module NeuralChip (
     output       MULT_DONE // multiply within the block is done
     );
 
-    wire [4:0] count;
     //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
-    reg [`DATA_W-1:0] block_a1 = 8'h00, block_a2 = 8'h00, block_a3 = 8'h00, block_a4 = 8'h00, block_b1 = 8'h00, block_b2 = 8'h00, block_b3 = 8'h00, block_b4 = 8'h00;
+    reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
 
-    reg [`DATA_W-1:0] block_result1 = 8'h00, block_result2 = 8'h00, block_result3 = 8'h00, block_result4 = 8'h00;
-    reg start = 1'b0;
-    reg load = 1'b0;
-    wire block_multiply_done = 1'b0;
+    reg [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
+    reg start;
+    reg load;
+    wire block_multiply_done;
     assign MULT_DONE = block_multiply_done;
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
@@ -33,7 +32,6 @@ module NeuralChip (
          .rst(RESET),
          .start(start),
          .load(load),
-         .counter(count),
          .block_multiply_done(block_multiply_done),
          .block_result1(block_result1),
          .block_result2(block_result2),
@@ -125,9 +123,9 @@ module NeuralChip (
         .tx_ack_o(tx_ack)
     );
 
-    reg [7:0] received_data = 8'h00;
-    reg data_received = 1'b0;
-    reg data_processed = 1'b0;
+    reg [7:0] received_data;
+    reg data_received;
+    reg data_processed;
 
     localparam IDLE = 0, RECEIVE_BR1_HIGH = 1, RECEIVE_BR1_LOW = 2, 
     RECEIVE_BR2_HIGH = 3, RECEIVE_BR2_LOW = 4, 
@@ -266,7 +264,7 @@ module NeuralChip (
     assign rx_ack = rx_ready && !data_received;
 
 
-    reg data_available = 1'b0;
+    reg data_available;
     
 // Define states
     localparam IDLE_SEND = 0, SEND_BR1_HIGH = 1, SEND_BR1_LOW = 2, 
@@ -464,7 +462,7 @@ module systolic_array (
                 block_result2 <= shift_registers_last_row[1][0];
                 block_result3 <= shift_registers_last_row[1][1];
                 block_result4 <= shift_registers_last_row[0][1];
-                counter <= `DATA_W'd0;
+                counter <= 5'd0;
                 block_multiply_done <= 1'b1;
             end else if(block_multiply_done != 1'b1)begin
                 counter <= counter + 1;
