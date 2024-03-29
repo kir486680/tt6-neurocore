@@ -12,11 +12,13 @@ module NeuralChip (
     );
 
     wire [4:0] count;
-    reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
+    //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
+    reg [`DATA_W-1:0] block_a1 = 8'h00, block_a2 = 8'h00, block_a3 = 8'h00, block_a4 = 8'h00, block_b1 = 8'h00, block_b2 = 8'h00, block_b3 = 8'h00, block_b4 = 8'h00;
 
-    wire [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
-    reg start, load;
-    wire block_multiply_done;
+    reg [`DATA_W-1:0] block_result1 = 8'h00, block_result2 = 8'h00, block_result3 = 8'h00, block_result4 = 8'h00;
+    reg start = 1'b0;
+    reg load = 1'b0;
+    wire block_multiply_done = 1'b0;
     assign MULT_DONE = block_multiply_done;
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
@@ -48,14 +50,6 @@ module NeuralChip (
      always @(posedge CLK) begin
          if (!RESET) begin
              current_mul_state <= IDLE_MUL;
-            //  block_a1 <= `DATA_W'd0;
-            //  block_a2 <= `DATA_W'd0;
-            //  block_a3 <= `DATA_W'd0;
-            //  block_a4 <= `DATA_W'd0;
-            //  block_b1 <= `DATA_W'd0;
-            //  block_b2 <= `DATA_W'd0;
-            //  block_b3 <= `DATA_W'd0;
-            //  block_b4 <= `DATA_W'd0;
              send_data <= 0;
          end else begin
              current_mul_state <= next_mul_state;
