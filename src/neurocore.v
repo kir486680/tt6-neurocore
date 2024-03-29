@@ -6,13 +6,12 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
+    output rx_error, // UART receive error
     output 	    reg  load_arr,         // UART transmit
     output       MULT_DONE // multiply within the block is done
     );
 
    
-
-    wire [4:0] count;
     reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
 
     wire [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
@@ -32,7 +31,6 @@ module NeuralChip (
          .rst(RESET),
          .start(start),
          .load(load),
-         .counter(count),
          .block_multiply_done(block_multiply_done),
          .block_result1(block_result1),
          .block_result2(block_result2),
@@ -48,21 +46,8 @@ module NeuralChip (
      
 // Update current_mul_state and send_data in a single always block
      always @(posedge CLK) begin
-        if (!RESET) begin
-            current_mul_state <= IDLE_MUL;
-            block_a1 <= `DATA_W'd0;
-            block_a2 <= `DATA_W'd0;
-            block_a3 <= `DATA_W'd0;
-            block_a4 <= `DATA_W'd0;
-            block_b1 <= `DATA_W'd0;
-            block_b2 <= `DATA_W'd0;
-            block_b3 <= `DATA_W'd0;
-            block_b4 <= `DATA_W'd0;
-            send_data <= 0; 
-            start <= 1'b0;
-            load <= 1'b0;
-        end
-        else begin
+
+        begin
             
             current_mul_state <= next_mul_state;
             // Update send_data only in the sequential block
@@ -77,6 +62,20 @@ module NeuralChip (
      
      // Calculate next state and send_data based on current state and inputs
      always @(*) begin
+        if (!RESET) begin
+            current_mul_state <= IDLE_MUL;
+            block_a1 = `DATA_W'd0;
+            block_a2 = `DATA_W'd0;
+            block_a3 = `DATA_W'd0;
+            block_a4 = `DATA_W'd0;
+            block_b1 = `DATA_W'd0;
+            block_b2 = `DATA_W'd0;
+            block_b3 = `DATA_W'd0;
+            block_b4 = `DATA_W'd0;
+            send_data = 0; 
+            start = 1'b0;
+            load = 1'b0;
+        end
         next_mul_state = IDLE_MUL;
          case (current_mul_state)
              IDLE_MUL: begin
@@ -86,8 +85,6 @@ module NeuralChip (
                  end else begin
                      next_mul_state = IDLE_MUL;
                  end
-                 
-            
              end
              LOAD: begin
              
@@ -118,7 +115,6 @@ module NeuralChip (
     wire [7:0] rx_data;
     wire       rx_ready;
     wire       rx_ack;
-    wire       rx_error;
     reg [7:0] tx_data;
     wire       tx_ready;
     wire       tx_ack;
@@ -287,7 +283,6 @@ module NeuralChip (
     assign rx_ack = rx_ready && !data_received;
 
 
-    reg [7:0] data_to_send = 8'h00;
     reg data_available = 1'b0;
     
 // Define states
@@ -302,7 +297,6 @@ module NeuralChip (
     //Assign LEDS[3]  to 1 if the send_staet is IDLE_SEND
     always @(posedge CLK) begin
         if(!RESET) begin
-            data_to_send <= 8'h00;
             data_available <= 1'b0;
             send_state <= IDLE_SEND;
         end

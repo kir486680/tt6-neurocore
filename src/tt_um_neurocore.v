@@ -21,11 +21,15 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
         .RESET(rst_n),
         .RXD(ui_in[0]),
         .TXD(uo_out[0]),
+        .rx_error(uo_out[3]),
         .load_arr(uo_out[2]), 
         .MULT_DONE(uo_out[1])
     );
 
     // All output pins must be assigned. If not used, assign to 0.
+    assign uio_in = 8'b0;      // Assign uio_in to 0 as it's not used for input
+    assign ui_in[7:1] = 7'b0;   // Assign ui_in[7:1] to 0 as it's not used for input
+    assign uo_out[7:4] = 4'b0;  // Assign ou_out[7:3] to 0 as it's not used for output
     assign uio_out = 8'b0;     // Assign uio_out to 0 as it's not used for output
     assign uio_oe = 8'b0;      // Assign uio_oe to 0 to configure uio pins as input or disable them for output
 
