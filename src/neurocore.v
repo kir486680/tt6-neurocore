@@ -39,15 +39,27 @@ module NeuralChip (
          .block_result4(block_result4)
      );
 
-    reg send_data =0;
+    reg send_data <=0;
 
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
-     reg [2:0] current_mul_state = IDLE_MUL;
-     reg [2:0] next_mul_state = IDLE_MUL;
+     reg [2:0] current_mul_state <= IDLE_MUL;
+     reg [2:0] next_mul_state <= IDLE_MUL;
      
 // Update current_mul_state and send_data in a single always block
      always @(posedge CLK) begin
-
+        if (!RESET) begin 
+            current_mul_state <= IDLE_MUL;
+            block_a1 <= `DATA_W'd0;
+            block_a2 <= `DATA_W'd0;
+            block_a3 <= `DATA_W'd0;
+            block_a4 <= `DATA_W'd0;
+            block_b1 <= `DATA_W'd0;
+            block_b2 <= `DATA_W'd0;
+            block_b3 <= `DATA_W'd0;
+            block_b4 <= `DATA_W'd0;
+            send_data <= 0; 
+        end 
+        else
         begin
             
             current_mul_state <= next_mul_state;
@@ -64,16 +76,7 @@ module NeuralChip (
      // Calculate next state and send_data based on current state and inputs
      always @(*) begin
         if (!RESET) begin
-            current_mul_state <= IDLE_MUL;
-            block_a1 = `DATA_W'd0;
-            block_a2 = `DATA_W'd0;
-            block_a3 = `DATA_W'd0;
-            block_a4 = `DATA_W'd0;
-            block_b1 = `DATA_W'd0;
-            block_b2 = `DATA_W'd0;
-            block_b3 = `DATA_W'd0;
-            block_b4 = `DATA_W'd0;
-            send_data = 0; 
+
             start = 1'b0;
             load = 1'b0;
         end
