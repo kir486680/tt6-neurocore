@@ -6,18 +6,19 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
-    output [5:0] load_arr,         // UART transmit
+    output 	    reg  load_arr,         // UART transmit
     output       MULT_DONE // multiply within the block is done
     );
 
+   
+
     wire [4:0] count;
     reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
+
     wire [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
     reg start, load;
     wire block_multiply_done;
     assign MULT_DONE = block_multiply_done;
-
-
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
          .block_a2(block_a2),
@@ -39,20 +40,30 @@ module NeuralChip (
          .block_result4(block_result4)
      );
 
-     reg send_data =0;
+    reg send_data =0;
 
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
      reg [2:0] current_mul_state = IDLE_MUL;
      reg [2:0] next_mul_state = IDLE_MUL;
      
-    // Update current_mul_state and send_data in a single always block
+// Update current_mul_state and send_data in a single always block
      always @(posedge CLK) begin
         if (!RESET) begin
             current_mul_state <= IDLE_MUL;
-            send_data <= 0;  // Reset send_data on RESET
-            load <= 0;
+            block_a1 <= `DATA_W'd0;
+            block_a2 <= `DATA_W'd0;
+            block_a3 <= `DATA_W'd0;
+            block_a4 <= `DATA_W'd0;
+            block_b1 <= `DATA_W'd0;
+            block_b2 <= `DATA_W'd0;
+            block_b3 <= `DATA_W'd0;
+            block_b4 <= `DATA_W'd0;
+            send_data <= 0; 
+            start <= 1'b0;
+            load <= 1'b0;
         end
         else begin
+            
             current_mul_state <= next_mul_state;
             // Update send_data only in the sequential block
             if (current_mul_state == START && block_multiply_done) begin
@@ -63,25 +74,26 @@ module NeuralChip (
             end
         end
     end
-
-
+     
      // Calculate next state and send_data based on current state and inputs
      always @(*) begin
         next_mul_state = IDLE_MUL;
          case (current_mul_state)
              IDLE_MUL: begin
+                
                  if (state_receive == DONE_RECEIVE) begin
                      next_mul_state = LOAD;
                  end else begin
                      next_mul_state = IDLE_MUL;
                  end
+                 
             
              end
              LOAD: begin
+             
                  next_mul_state = START;
                  load = 1;
                  start = 0;
-                 // Other LOAD state logic
              end
              START: begin
                     load = 0;
@@ -102,8 +114,7 @@ module NeuralChip (
      end
 
 
-
-    // UART stuff 
+// UART stuff 
     wire [7:0] rx_data;
     wire       rx_ready;
     wire       rx_ack;
@@ -143,7 +154,6 @@ module NeuralChip (
     DONE_RECEIVE = 17;
     //now need to keep track of the state of the data that is being received
     reg [5:0] state_receive = IDLE;
-    assign load_arr = state_receive;
    
     always @(posedge CLK) begin
         if (!RESET) begin
@@ -165,7 +175,7 @@ module NeuralChip (
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
                     state_receive <= RECEIVE_BR1_HIGH;
-                 
+                    load_arr = 1'b1;
                 end
             end
             RECEIVE_BR1_HIGH: begin
@@ -250,9 +260,17 @@ module NeuralChip (
                 
             end
             DONE_RECEIVE: begin
+           
                 if (rx_data == 8'b11111111) begin
                     state_receive <= IDLE;
                     data_processed <= 1'b1;
+                    //check if blocka1, blocka2, blocka3, blocka4 are all 0, if so, then light up LEDS[0]
+                    if(block_a1 == 0 && block_a2 == 0 && block_a3 == 0 && block_a4 == 0) begin
+                        //LEDS[0] <= 0;
+                    end
+                    else begin
+                        //LEDS[0] <= 1;
+                    end
                 end
             end
         endcase
@@ -281,6 +299,7 @@ module NeuralChip (
     reg [3:0] send_state = IDLE_SEND;
 
 
+    //Assign LEDS[3]  to 1 if the send_staet is IDLE_SEND
     always @(posedge CLK) begin
         if(!RESET) begin
             data_to_send <= 8'h00;
@@ -288,6 +307,9 @@ module NeuralChip (
             send_state <= IDLE_SEND;
         end
         else begin
+
+            
+
 
         if(send_data) begin
         if (!data_available && tx_ack && received_data == 8'b11111111) begin
@@ -300,6 +322,7 @@ module NeuralChip (
                     send_state <= SEND_BR1_HIGH;
                 end
                 SEND_BR1_HIGH: begin
+                    
                     tx_data <= block_result1[15:8];
                     send_state <= SEND_BR1_LOW;
                 end
@@ -719,6 +742,31 @@ module fmul(
 
     assign result = {sign, e_result, overflow_mask & M_result};
 endmodule
+
+
+/* 
+
+Receiver Half:
+
+input rx_i: This is the input signal for the receiver. It represents the incoming serial data line. The receiver samples this signal to receive data.
+output [7:0] rx_data_o: This is an 8-bit output signal that holds the received data byte. When a complete byte is received, rx_data_o is updated with the received data.
+output rx_ready_o: This is an output signal that indicates when a complete byte has been received and is ready to be read. It is asserted (goes high) when the receiver has successfully received a byte and is in the RX_FULL state.
+input rx_ack_i: This is an input signal used to acknowledge the receipt of the received data. When the receiver is in the RX_FULL state and rx_ack_i is asserted, the receiver transitions back to the RX_IDLE state, ready to receive the next byte.
+output rx_error_o: This is an output signal that indicates if an error occurred during the reception of a byte. It is asserted when the receiver is in the RX_ERROR state, which can happen if the stop bit is not detected correctly.
+
+Transmitter Half:
+
+output tx_o: This is the output signal for the transmitter. It represents the outgoing serial data line. The transmitter drives this signal to send data.
+input [7:0] tx_data_i: This is an 8-bit input signal that holds the data byte to be transmitted. When tx_ready_i is asserted, the transmitter latches the value of tx_data_i and starts the transmission process.
+input tx_ready_i: This is an input signal that indicates when a new byte is ready to be transmitted. When tx_ready_i is asserted and the transmitter is in the TX_IDLE state, the transmitter starts the transmission of the byte.
+output tx_ack_o: This is an output signal that acknowledges the transmitter is ready to accept a new byte for transmission. It is asserted when the transmitter is in the TX_IDLE state, indicating that it has completed the previous transmission and is ready for a new byte.
+These signals are triggered and updated based on the state machines and strobes in the UART module:
+
+The receiver state machine samples rx_i on the rising edge of rx_sampler_clk and transitions through the states (RX_IDLE, RX_START, RX_DATA, RX_STOP, RX_FULL, RX_ERROR) to receive a byte.
+The transmitter state machine updates tx_o on the rising edge of tx_sampler_clk and transitions through the states (TX_IDLE, TX_START, TX_DATA, TX_STOP0, TX_STOP1) to transmit a byte.
+The strobes (rx_strobe and tx_strobe) are generated based on the respective sampler clocks and are used to control the timing of the state transitions and data sampling/updating.
+*/
+
 
 
 module UART #(

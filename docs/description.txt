@@ -1,0 +1,63 @@
+
+1. `NeuralChip` module:
+   - This is the top-level module of the design.
+   - It has various input and output ports for system clock, reset, UART communication, and control signals.
+   - It instantiates the `systolic_array` module and connects the necessary signals.
+   - It has a state machine (`current_mul_state`) to control the multiplication process.
+   - It receives data from the UART module and stores it in registers (`block_a1`, `block_a2`, etc.).
+   - It sends the multiplication results back through the UART module.
+   - It uses a custom UART module for communication.
+
+2. `systolic_array` module:
+   - This module implements a systolic array for matrix multiplication.
+   - It takes input blocks (`block_a1`, `block_a2`, etc.) and performs the multiplication.
+   - It generates the necessary wires and registers for the systolic array structure.
+   - It instantiates multiple `block` modules to form the systolic array.
+   - It has a state machine to control the loading and computation of the systolic array.
+   - It outputs the multiplication results (`block_result1`, `block_result2`, etc.).
+
+3. `block` module:
+   - This module represents a single processing element (PE) in the systolic array.
+   - It takes inputs from the north and west directions and a weight input.
+   - It performs the multiplication of the input and weight using the `fmul` module.
+   - It adds the multiplication result with the input from the north using the `fadd` module.
+   - It outputs the result to the south and east directions.
+   - It has registers to store the weight and control signals for computation.
+
+4. `fadd` module:
+   - This module performs floating-point addition.
+   - It takes two input operands in IEEE-754 format and produces the sum.
+   - It handles special cases like exceptions and sign management.
+   - It uses a series of combinational logic to perform the addition.
+
+5. `fmul` module:
+   - This module performs floating-point multiplication.
+   - It takes two input operands in IEEE-754 format and produces the product.
+   - It handles special cases like zero checks, overflow, and underflow.
+   - It uses a series of combinational logic to perform the multiplication.
+
+6. `UART` module:
+   - This module implements a Universal Asynchronous Receiver/Transmitter (UART) for serial communication.
+   - It has a receiver half and a transmitter half.
+   - The receiver half samples the incoming data, synchronizes it, and outputs the received data.
+   - The transmitter half takes input data, serializes it, and sends it out.
+   - It uses oversampling and clock division to generate the necessary timing signals.
+
+7. `ClockDiv` module:
+   - This module is used for clock division to generate different clock frequencies.
+   - It takes an input clock and parameters for the desired output frequency and phase.
+   - It uses a counter and combinational logic to generate the divided clock signal.
+
+Now, let's go through the flow of the design:
+
+1. The `NeuralChip` module receives input data through the UART module.
+2. The received data is stored in registers (`block_a1`, `block_a2`, etc.) in the `NeuralChip` module.
+3. The `NeuralChip` module instantiates the `systolic_array` module and passes the input data to it.
+4. The `systolic_array` module loads the input data into its internal registers and starts the multiplication process.
+5. The `block` modules within the `systolic_array` perform the multiplication and addition operations in a systolic fashion.
+6. The multiplication results are output from the `systolic_array` module back to the `NeuralChip` module.
+7. The `NeuralChip` module sends the multiplication results back through the UART module.
+
+This is a high-level overview of the code structure and flow. The code implements a neural chip with a systolic array for matrix multiplication, utilizing floating-point arithmetic and UART communication.
+
+Please note that this is a simplified explanation, and there might be additional details and nuances in the actual implementation. Let me know if you have any specific questions or need further clarification on any part of the code.

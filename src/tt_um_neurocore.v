@@ -14,13 +14,14 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
 );
 
 
-    // Instantiate the NeuralChip
+
+
     NeuralChip neural_chip_inst (
         .CLK(clk),
         .RESET(rst_n),
         .RXD(ui_in[0]),
         .TXD(uo_out[0]),
-        .load_arr(uo_out[7:2]),
+        .load_arr(uo_out[2]), 
         .MULT_DONE(uo_out[1])
     );
 
