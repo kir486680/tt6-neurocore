@@ -11,7 +11,7 @@ module NeuralChip (
     output       MULT_DONE // multiply within the block is done
     );
 
-   
+    wire [4:0] count;
     reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
 
     wire [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
@@ -31,6 +31,7 @@ module NeuralChip (
          .rst(RESET),
          .start(start),
          .load(load),
+         .counter(count),
          .block_multiply_done(block_multiply_done),
          .block_result1(block_result1),
          .block_result2(block_result2),
