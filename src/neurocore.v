@@ -158,7 +158,7 @@ module NeuralChip (
         // state machine to receive the data
             case (state_receive)
             IDLE: begin
-                
+                $display("Waiting for data");
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
                     state_receive <= RECEIVE_BR1_HIGH;
@@ -836,7 +836,9 @@ module UART #(
                 if(!rx_i) begin
                     rx_sampler_reset <= 1'b1;
                     rx_state <= RX_START;
+                    $display("Receiving data from the PC");
                 end
+                
             RX_START:
                 if(rx_strobe)
                     rx_state <= RX_DATA;
