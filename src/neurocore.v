@@ -21,7 +21,7 @@ module NeuralChip (
     reg start;
     reg load;
     wire block_multiply_done;
-    assign logs[1] = block_multiply_done;
+
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
          .block_a2(block_a2),
@@ -45,7 +45,12 @@ module NeuralChip (
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
      reg [2:0] current_mul_state = IDLE_MUL;
      reg [2:0] next_mul_state = IDLE_MUL;
-     
+     assign logs[1] = block_multiply_done;
+     assign logs[2] = start;
+     assign logs[3] = load;
+     assign logs[6:4] = current_mul_state;
+     assign logs[7] = send_data; 
+    assign logs[0] = 1'b0;
      // Update current_mul_state and send_data in a single always block
      always @(posedge CLK or negedge RESET) begin
          if (!RESET) begin
@@ -59,7 +64,7 @@ module NeuralChip (
                 block_b2 <= `DATA_W-1'd0;
                 block_b3 <= `DATA_W-1'd0;
                 block_b4 <= `DATA_W-1'd0;
-                
+
          end else begin
              current_mul_state <= next_mul_state;
              // Update send_data only in the sequential block
