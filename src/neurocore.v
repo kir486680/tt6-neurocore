@@ -141,7 +141,7 @@ module NeuralChip (
     reg [5:0] state_receive = IDLE;
    
     always @(posedge CLK) begin
-        if (!RESET) begin
+        if (!RESET or negedge RESET) begin
             data_received <= 1'b0;
             data_processed <= 1'b0;
             received_data <= 8'h00;
