@@ -63,39 +63,39 @@ module NeuralChip (
      // Calculate next state and send_data based on current state and inputs
      always @(posedge CLK) begin
          if (!RESET) begin
-             start = 1'b0;
-             load = 1'b0;
-             next_mul_state = IDLE_MUL;
+             start <= 1'b0;
+             load <= 1'b0;
+             next_mul_state <= IDLE_MUL;
          end
          
          case (current_mul_state)
              IDLE_MUL: begin
                  if (state_receive == DONE_RECEIVE) begin
-                     next_mul_state = LOAD;
+                     next_mul_state <= LOAD;
                  end else begin
-                     next_mul_state = IDLE_MUL;
+                     next_mul_state <= IDLE_MUL;
                  end
              end
              LOAD: begin
-                 next_mul_state = START;
-                 load = 1;
-                 start = 0;
+                 next_mul_state <= START;
+                 load <= 1;
+                 start <= 0;
              end
              START: begin
-                 load = 0;
-                 start = 1;
+                 load <= 0;
+                 start <= 1;
                  if (block_multiply_done) begin
-                     next_mul_state = DONE_MUL;
+                     next_mul_state <= DONE_MUL;
                  end else begin
-                     next_mul_state = START;
+                     next_mul_state <= START;
                  end
                  // Other START state logic
              end
              DONE_MUL: begin
                  // DONE_MUL state logic
-                 next_mul_state = IDLE_MUL;
+                 next_mul_state <= IDLE_MUL;
              end
-             default: next_mul_state = IDLE_MUL;
+             default: next_mul_state <= IDLE_MUL;
          endcase
      end
 
