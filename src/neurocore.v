@@ -6,21 +6,19 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output [7:0] logs, // UART receive error
-    output [7:0] rx_data_test
+    output [7:0] rx_data_test // UART receive data
     );
 
     //assign rx_data_test to a dummy wire 
-    assign rx_data_test = 8'b0;
+    assign rx_data_test = 0;
     
-
-    //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
-    reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
-
-    reg [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
+    // Parameters for the systolic array
     reg start;
     reg load;
     wire block_multiply_done;
-
+    //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
+    reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
+    reg [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
     systolic_array systolic_array_inst (
          .block_a1(block_a1),
          .block_a2(block_a2),
@@ -40,31 +38,39 @@ module NeuralChip (
          .block_result3(block_result3),
          .block_result4(block_result4)
      );
+
+    //state machine params
      reg send_data = 0;
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
      reg [2:0] current_mul_state = IDLE_MUL;
      reg [2:0] next_mul_state = IDLE_MUL;
+
+    //assign logs to various signals
+     assign logs[0] = start;
      assign logs[1] = block_multiply_done;
      assign logs[2] = start;
      assign logs[3] = load;
      assign logs[6:4] = current_mul_state;
      assign logs[7] = send_data; 
-    assign logs[0] = start;
+    
+
+
+
+
      // Update current_mul_state and send_data in a single always block
      always @(posedge CLK or negedge RESET) begin
          if (!RESET) begin
-             current_mul_state <= IDLE_MUL;
-             send_data <= 0;
-             block_a1 <= `DATA_W-1'd0;
-                block_a2 <= `DATA_W'd0;
-                block_a3 <= `DATA_W'd0;
-                block_a4 <= `DATA_W'd0;
-                block_b1 <= `DATA_W'd0;
-                block_b2 <= `DATA_W'd0;
-                block_b3 <= `DATA_W'd0;
-                block_b4 <= `DATA_W'd0;
+            current_mul_state <= IDLE_MUL;
+            send_data <= 0;
+            block_a1 <= 0;
+            block_a2 <= 0;
+            block_a3 <= 0;
+            block_a4 <= 0;
+            block_b1 <= 0;
+            block_b2 <= 0;
+            block_b3 <= 0;
+            block_b4 <= 0;
                 
-
          end else begin
              current_mul_state <= next_mul_state;
              // Update send_data only in the sequential block
@@ -79,11 +85,10 @@ module NeuralChip (
      // Calculate next state and send_data based on current state and inputs
      always @(*) begin
          if (!RESET) begin
-             start = 1'b0;
-             load = 1'b0;
+             start = 0;
+             load = 0;
              next_mul_state = IDLE_MUL;
          end
-         
          case (current_mul_state)
              IDLE_MUL: begin
                  if (RXD == 1'b1) begin
@@ -117,10 +122,6 @@ module NeuralChip (
 
 
 endmodule
-
-//send all ones 11111111 from pc to show that the mult result data has been sent 
-//send all ones 11111111 from controller to show the last piece of the data has been sent to pc 
-// send b111111110 from controller to how that we are beginning to send the data to pc.
 
 
 
