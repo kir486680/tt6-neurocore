@@ -5,21 +5,14 @@ module NeuralChip (
     input 	     CLK, // system clock 
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
-    output 	     TXD, // UART transmit
     output [4:0]received_state, // UART receive error
     output 	    reg  load_arr,         // UART transmit
-    output       MULT_DONE,  // multiply within the block is done
     output [7:0] rx_data_test
     );
 
     //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
     reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
 
-    reg [`DATA_W-1:0] block_result1, block_result2, block_result3, block_result4;
-    reg start;
-    reg load;
-    wire block_multiply_done;
-    assign MULT_DONE = block_multiply_done;
 
 
 // UART stuff 
