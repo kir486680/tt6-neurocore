@@ -61,7 +61,7 @@ module NeuralChip (
      end
      
      // Calculate next state and send_data based on current state and inputs
-     always @(*) begin
+     always @(posedge CLK) begin
          if (!RESET) begin
              start = 1'b0;
              load = 1'b0;
