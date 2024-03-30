@@ -12,6 +12,8 @@ module NeuralChip (
 
     //assign rx_data_test to a dummy wire 
     assign rx_data_test = 8'b0;
+    //assign TXD to a dummy wire
+    assign TXD = 1'b0;
     
 
     //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
