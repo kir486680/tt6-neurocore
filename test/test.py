@@ -27,6 +27,7 @@ async def test_neural_chip(dut):
     clock_period = 83.33
     clock = Clock(dut.clk, clock_period, units="ns")
     cocotb.start_soon(clock.start())
+    cocotb.start_soon(uart_receive(dut))
     dut.rst_n.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
@@ -69,3 +70,11 @@ async def send_byte(dut, byte):
     dut.ui_in[0].value = 1
     print("Sending stop bit")
     await Timer(104.167, units='us')  # Delay for 1 bit time at 9600 baud
+
+#asynchronously wait for change in uio_out and then read the value of it 
+async def uart_receive(dut):
+    while True:
+        await Edge(dut.uio_out)
+        byte = ""
+        byte += str(dut.uio_out.value)
+        print("UART received:", byte)

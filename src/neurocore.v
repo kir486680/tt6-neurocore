@@ -8,7 +8,8 @@ module NeuralChip (
     output 	     TXD, // UART transmit
     output rx_error, // UART receive error
     output 	    reg  load_arr,         // UART transmit
-    output       MULT_DONE // multiply within the block is done
+    output       MULT_DONE,  // multiply within the block is done
+    output [7:0] rx_data_test
     );
 
     //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
@@ -102,6 +103,7 @@ module NeuralChip (
 
 // UART stuff 
     wire [7:0] rx_data;
+    assign rx_data_test = rx_data;
     wire       rx_ready;
     wire       rx_ack;
     reg [7:0] tx_data;
