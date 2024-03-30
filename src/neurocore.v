@@ -5,15 +5,12 @@ module NeuralChip (
     input 	     CLK, // system clock 
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
-    output 	     TXD, // UART transmit
     output [7:0] logs, // UART receive error
     output [7:0] rx_data_test
     );
 
     //assign rx_data_test to a dummy wire 
     assign rx_data_test = 8'b0;
-    //assign TXD to a dummy wire
-    assign TXD = 1'b0;
     
 
     //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
@@ -52,20 +49,21 @@ module NeuralChip (
      assign logs[3] = load;
      assign logs[6:4] = current_mul_state;
      assign logs[7] = send_data; 
-    assign logs[0] = 1'b0;
+    assign logs[0] = start;
      // Update current_mul_state and send_data in a single always block
      always @(posedge CLK or negedge RESET) begin
          if (!RESET) begin
              current_mul_state <= IDLE_MUL;
              send_data <= 0;
              block_a1 <= `DATA_W-1'd0;
-                block_a2 <= `DATA_W-1'd0;
-                block_a3 <= `DATA_W-1'd0;
-                block_a4 <= `DATA_W-1'd0;
-                block_b1 <= `DATA_W-1'd0;
-                block_b2 <= `DATA_W-1'd0;
-                block_b3 <= `DATA_W-1'd0;
-                block_b4 <= `DATA_W-1'd0;
+                block_a2 <= `DATA_W'd0;
+                block_a3 <= `DATA_W'd0;
+                block_a4 <= `DATA_W'd0;
+                block_b1 <= `DATA_W'd0;
+                block_b2 <= `DATA_W'd0;
+                block_b3 <= `DATA_W'd0;
+                block_b4 <= `DATA_W'd0;
+                
 
          end else begin
              current_mul_state <= next_mul_state;
