@@ -40,42 +40,17 @@ async def test_neural_chip(dut):
     cocotb.start_soon(wait_for_load(dut))
 
     # Send the initial start byte (0xFE)
-    await send_byte(dut, '11111110')
+    await send_bit(dut)
     await Timer(104.167, units='ns')
-
-    # Generate and send float16 values
-    for i in range(8):
-        float16 = float(i+1)
-        high, low = float16_to_8bit_bytes(float16)
-        # Send the high byte of the float
-        await send_byte(dut, format(high, '08b'))
-        await Timer(104.167, units='ns')
-        # Send the low byte of the float
-        await send_byte(dut, format(low, '08b'))
-        await Timer(104.167, units='ns')
-
-    await send_byte(dut, '11111111')
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
     print(dut.uo_out[1].value)
     #assert dut.uo_out[1].value == 1
     await RisingEdge(dut.clk)
 
-async def send_byte(dut, byte):
-    print("Byte to send:", byte)
-    # Send start bit
-    dut.ui_in[0].value = 0
-    print("Sending start bit")
-    await Timer(104.167, units='us')  # Delay for 1 bit time at 9600 baud
-    # Send data bits
-    for i in range(7, -1, -1):
-        dut.ui_in[0].value = int(byte[i])
-        print(f"Sending bit {7-i+1}: {dut.ui_in[0].value}")
-        await Timer(104.167, units='us')  # Delay for 1 bit time at 9600 baud
-    # Send stop bit
-    dut.ui_in[0].value = 1
-    print("Sending stop bit")
-    await Timer(104.167, units='us')  # Delay for 1 bit time at 9600 baud
+async def send_bit(dut):
+
+    dut.ui_in[0].value = int(1)
+    print(f"Sending bit : {dut.ui_in[0].value}")
+    await Timer(104.167, units='us')  # Delay for a little 
 
 #asynchronously wait for change in uio_out and then read the value of it 
 async def uart_receive(dut):
@@ -86,16 +61,17 @@ async def uart_receive(dut):
         print("UART received:", byte)
 
 
-#asynchronously wait for change in uo_out[2] to go high 
+
 async def wait_for_load(dut):
     while True:
         await Edge(dut.uo_out)
-        print("Load signal", dut.uo_out[2].value)
-        print("Done signal", dut.uo_out[1].value)
         #now print the rest of the values
-        print("Rest of uo_out", dut.uo_out[3].value)
-        print("Rest of uo_out", dut.uo_out[4].value)
-        print("Rest of uo_out", dut.uo_out[5].value)
-        print("Rest of uo_out", dut.uo_out[6].value)
-        print("Rest of uo_out", dut.uo_out[7].value)
+        print("log port 0", dut.uo_out[0].value)
+        print("log port 1", dut.uo_out[1].value)
+        print("log port 2", dut.uo_out[2].value)
+        print("log port 3", dut.uo_out[3].value)
+        print("log port 4", dut.uo_out[4].value)
+        print("log port 5", dut.uo_out[5].value)
+        print("log port 6", dut.uo_out[6].value)
+        print("log port 7", dut.uo_out[7].value)
         break
