@@ -5,22 +5,20 @@ module NeuralChip (
     input 	     CLK, // system clock 
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
-    output [4:0]received_state, // UART receive error
+    output [7:0]received_state, // UART receive error
     output 	    reg  load_arr,         // UART transmit
     output [7:0] rx_data_test
     );
-
-    //reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
-    reg [`DATA_W-1:0] block_a1, block_a2, block_a3, block_a4, block_b1, block_b2, block_b3, block_b4;
 
 
 
 // UART stuff 
     wire [7:0] rx_data;
-    assign rx_data_test = rx_data;
+    
     wire       rx_ready;
     wire       rx_ack;
-
+    assign received_state[6] = rx_ready;
+    assign received_state[7] = rx_ack;
     UART #(
         .FREQ(12_000_000),
         .BAUD(9600)
@@ -35,21 +33,15 @@ module NeuralChip (
 
     reg [7:0] received_data;
     reg data_received;
+    assign rx_data_test = received_data;
     reg data_processed;
 
-    localparam IDLE = 0, RECEIVE_BR1_HIGH = 1, RECEIVE_BR1_LOW = 2, 
-    RECEIVE_BR2_HIGH = 3, RECEIVE_BR2_LOW = 4, 
-    RECEIVE_BR3_HIGH = 5, RECEIVE_BR3_LOW = 6,
-    RECEIVE_BR4_HIGH = 7, RECEIVE_BR4_LOW = 8, 
-    RECEIVE_BR5_HIGH = 9, RECEIVE_BR5_LOW = 10,
-    RECEIVE_BR6_HIGH = 11, RECEIVE_BR6_LOW = 12,
-    RECEIVE_BR7_HIGH = 13, RECEIVE_BR7_LOW = 14,
-    RECEIVE_BR8_HIGH = 15, RECEIVE_BR8_LOW = 16,
-    DONE_RECEIVE = 17;
+    localparam IDLE = 0, DUMMY_STATE = 1;
     //now need to keep track of the state of the data that is being received
     
     reg [5:0] state_receive = IDLE;
-    assign received_state = state_receive[4:0];
+    assign received_state[5:0] = state_receive[5:0];
+
     always @(posedge CLK) begin
         if (!RESET ) begin
             data_received <= 1'b0;
@@ -69,97 +61,8 @@ module NeuralChip (
                 $display("Waiting for data");
                 if (rx_data == 8'b11111110) begin
                     data_processed <= 1'b1;
-                    state_receive <= RECEIVE_BR1_HIGH;
+                    state_receive <= DUMMY_STATE;
                     load_arr = 1'b1;
-                end
-            end
-            RECEIVE_BR1_HIGH: begin
-                block_a1[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR1_LOW;
-            end
-            RECEIVE_BR1_LOW: begin
-                block_a1[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR2_HIGH;
-            end
-            RECEIVE_BR2_HIGH: begin
-                block_a2[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR2_LOW;
-            end
-            RECEIVE_BR2_LOW: begin
-                block_a2[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR3_HIGH;
-            end
-            RECEIVE_BR3_HIGH: begin
-                block_a3[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR3_LOW;
-            end
-            RECEIVE_BR3_LOW: begin
-                block_a3[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR4_HIGH;
-            end
-            RECEIVE_BR4_HIGH: begin
-                block_a4[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR4_LOW;
-            end
-            RECEIVE_BR4_LOW: begin
-                block_a4[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR5_HIGH;
-            end
-            RECEIVE_BR5_HIGH: begin
-                block_b1[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR5_LOW;
-            end
-            RECEIVE_BR5_LOW: begin
-                block_b1[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR6_HIGH;
-            end
-            RECEIVE_BR6_HIGH: begin
-                block_b2[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR6_LOW;
-            end
-            RECEIVE_BR6_LOW: begin
-                block_b2[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR7_HIGH;
-            end
-            RECEIVE_BR7_HIGH: begin
-                block_b3[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR7_LOW;
-            end
-            RECEIVE_BR7_LOW: begin
-                block_b3[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR8_HIGH;
-            end
-            RECEIVE_BR8_HIGH: begin
-                block_b4[15:8] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= RECEIVE_BR8_LOW;
-            end
-            RECEIVE_BR8_LOW: begin
-                block_b4[7:0] <= rx_data;
-                data_processed <= 1'b1;
-                state_receive <= DONE_RECEIVE;
-                
-            end
-            DONE_RECEIVE: begin
-           
-                if (rx_data == 8'b11111111) begin
-                    state_receive <= IDLE;
-                    data_processed <= 1'b1;
-                    $display("Data received and processed");
                 end
             end
         endcase
@@ -300,7 +203,6 @@ module UART #(
                 if(!rx_i) begin
                     rx_sampler_reset <= 1'b1;
                     rx_state <= RX_START;
-                    $display("Receiving data from the PC");
                 end
                 
             RX_START:

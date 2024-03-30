@@ -92,7 +92,6 @@ async def wait_for_load(dut):
         await Edge(dut.uo_out)
         print("Load signal", dut.uo_out[2].value)
         print("Done signal", dut.uo_out[1].value)
-        print("RXD signal", dut.uo_out[0].value)
         #now print the rest of the values
         print("Rest of uo_out", dut.uo_out[3].value)
         print("Rest of uo_out", dut.uo_out[4].value)
