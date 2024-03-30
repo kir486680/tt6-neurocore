@@ -21,7 +21,7 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
         .RESET(rst_n),
         .RXD(ui_in[0]),
         .TXD(uo_out[0]),
-        .rx_error(uo_out[3]),
+        .received_state(uo_out[7:3]),
         .load_arr(uo_out[2]), 
         .MULT_DONE(uo_out[1]),
         .rx_data_test(uio_out)

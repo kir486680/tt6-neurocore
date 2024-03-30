@@ -6,7 +6,7 @@ module NeuralChip (
     input 	     RESET, // reset button
     input 	     RXD, // UART receive
     output 	     TXD, // UART transmit
-    output rx_error, // UART receive error
+    output [4:0]received_state, // UART receive error
     output 	    reg  load_arr,         // UART transmit
     output       MULT_DONE,  // multiply within the block is done
     output [7:0] rx_data_test
@@ -39,7 +39,6 @@ module NeuralChip (
          .block_result3(block_result3),
          .block_result4(block_result4)
      );
-
      reg send_data = 0;
      localparam IDLE_MUL = 0, LOAD = 1, START = 2, DONE_MUL = 3;
      reg [2:0] current_mul_state = IDLE_MUL;
@@ -62,41 +61,41 @@ module NeuralChip (
      end
      
      // Calculate next state and send_data based on current state and inputs
-     always @(posedge CLK) begin
+     always @(*) begin
          if (!RESET) begin
-             start <= 1'b0;
-             load <= 1'b0;
-             next_mul_state <= IDLE_MUL;
+             start = 1'b0;
+             load = 1'b0;
+             next_mul_state = IDLE_MUL;
          end
          
          case (current_mul_state)
              IDLE_MUL: begin
                  if (state_receive == DONE_RECEIVE) begin
-                     next_mul_state <= LOAD;
+                     next_mul_state = LOAD;
                  end else begin
-                     next_mul_state <= IDLE_MUL;
+                     next_mul_state = IDLE_MUL;
                  end
              end
              LOAD: begin
-                 next_mul_state <= START;
-                 load <= 1;
-                 start <= 0;
+                 next_mul_state = START;
+                 load = 1;
+                 start = 0;
              end
              START: begin
-                 load <= 0;
-                 start <= 1;
+                 load = 0;
+                 start = 1;
                  if (block_multiply_done) begin
-                     next_mul_state <= DONE_MUL;
+                     next_mul_state = DONE_MUL;
                  end else begin
-                     next_mul_state <= START;
+                     next_mul_state = START;
                  end
                  // Other START state logic
              end
              DONE_MUL: begin
                  // DONE_MUL state logic
-                 next_mul_state <= IDLE_MUL;
+                 next_mul_state = IDLE_MUL;
              end
-             default: next_mul_state <= IDLE_MUL;
+             default: next_mul_state = IDLE_MUL;
          endcase
      end
 
@@ -119,7 +118,7 @@ module NeuralChip (
         .rx_data_o(rx_data),
         .rx_ready_o(rx_ready),
         .rx_ack_i(rx_ack),
-        .rx_error_o(rx_error),
+        //.rx_error_o(rx_error),
         .tx_o(TXD),
         .tx_data_i(tx_data),
         .tx_ready_i(tx_ready),
@@ -140,8 +139,9 @@ module NeuralChip (
     RECEIVE_BR8_HIGH = 15, RECEIVE_BR8_LOW = 16,
     DONE_RECEIVE = 17;
     //now need to keep track of the state of the data that is being received
+    
     reg [5:0] state_receive = IDLE;
-   
+    assign received_state = state_receive[4:0];
     always @(posedge CLK) begin
         if (!RESET ) begin
             data_received <= 1'b0;
@@ -251,6 +251,7 @@ module NeuralChip (
                 if (rx_data == 8'b11111111) begin
                     state_receive <= IDLE;
                     data_processed <= 1'b1;
+                    $display("Data received and processed");
                 end
             end
         endcase
@@ -298,6 +299,7 @@ module NeuralChip (
                 IDLE_SEND: begin
                     tx_data <= 8'b11111110;
                     send_state <= SEND_BR1_HIGH;
+                    $display("Sending data back from the chip");
                 end
                 SEND_BR1_HIGH: begin
                     
@@ -950,60 +952,43 @@ module UART #(
 endmodule
 
 
-
 module ClockDiv #(
-    parameter FREQ_I  = 2,             // Input frequency
-    parameter FREQ_O  = 1,             // Output frequency
-    parameter PHASE   = 1'b0,          // Phase
-    parameter MAX_PPM = 1_000_000      // Maximum allowed parts per million deviation
-) (
-    input  reset,
-    input  clk_i,
-    output clk_o
-);
+        parameter FREQ_I  = 2,
+        parameter FREQ_O  = 1,
+        parameter PHASE   = 1'b0,
+        parameter MAX_PPM = 1_000_000
+    ) (
+        input  reset,
+        input  clk_i,
+        output clk_o
+    );
 
-// Calculate initial counter value, rounding up.
-localparam INIT = FREQ_I / FREQ_O / 2 - 1;
+    // This calculation always rounds frequency up.
+    localparam INIT = FREQ_I / FREQ_O / 2 - 1;
+    localparam ACTUAL_FREQ_O = FREQ_I / ((INIT + 1) * 2);
+    localparam PPM = 64'd1_000_000 * (ACTUAL_FREQ_O - FREQ_O) / FREQ_O;
+    generate
+        if(INIT < 0)
+            _ERROR_FREQ_TOO_HIGH_ error();
+        if(PPM > MAX_PPM)
+            _ERROR_FREQ_DEVIATION_TOO_HIGH_ error();
+    endgenerate
 
-// Calculate the actual output frequency based on INIT.
-localparam ACTUAL_FREQ_O = FREQ_I / ((INIT + 1) * 2);
-
-// Calculate the parts per million (PPM) deviation from the desired frequency.
-localparam PPM = 64'd1_000_000 * (ACTUAL_FREQ_O - FREQ_O) / FREQ_O;
-
-// Check for configuration errors at compile time.
-generate
-    if(INIT < 0) begin
-        _ERROR_FREQ_TOO_HIGH_ error();
-    end
-    if(PPM > MAX_PPM) begin
-        _ERROR_FREQ_DEVIATION_TOO_HIGH_ error();
-    end
-endgenerate
-
-// Calculate the number of bits required for the counter.
-localparam CNT_BITS = $clog2(INIT + 1);
-
-// Define the counter with the calculated number of bits.
-reg [CNT_BITS:0] cnt = 0;
-
-// Clock output register.
-reg clk = PHASE;
-
-always @(posedge clk_i or negedge reset) begin
-    if (!reset) begin
-        cnt <= 0;
-        clk <= PHASE;
-    end else begin
-        if (cnt == 0) begin
-            clk <= ~clk;
-            cnt <= INIT[CNT_BITS:0];  // Explicitly specify bit-width for INIT
+    reg [$clog2(INIT):0] cnt = 0;
+    reg                  clk = PHASE;
+    always @(posedge clk_i or negedge reset)
+        if(!reset) begin
+            cnt <= 0;
+            clk <= PHASE;
         end else begin
-            cnt <= cnt - 1;
+            if(cnt == 0) begin
+                clk <= ~clk;
+                cnt <= INIT;
+            end else begin
+                cnt <= cnt - 1;
+            end
         end
-    end
-end
 
-assign clk_o = clk;
+    assign clk_o = clk;
 
 endmodule

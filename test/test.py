@@ -26,14 +26,18 @@ def binary_strings_to_float16(high_byte_str, low_byte_str):
 async def test_neural_chip(dut):
     clock_period = 83.33
     clock = Clock(dut.clk, clock_period, units="ns")
+
     cocotb.start_soon(clock.start())
-    cocotb.start_soon(uart_receive(dut))
+
     dut.rst_n.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
+
+    cocotb.start_soon(uart_receive(dut))
+    cocotb.start_soon(wait_for_load(dut))
 
     # Send the initial start byte (0xFE)
     await send_byte(dut, '11111110')
@@ -51,9 +55,26 @@ async def test_neural_chip(dut):
         await Timer(104.167, units='ns')
 
     await send_byte(dut, '11111111')
-    await Timer(104.167, units='ns')
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     print(dut.uo_out[1].value)
     assert dut.uo_out[1].value == 1
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
 
 async def send_byte(dut, byte):
     print("Byte to send:", byte)
@@ -78,3 +99,19 @@ async def uart_receive(dut):
         byte = ""
         byte += str(dut.uio_out.value)
         print("UART received:", byte)
+
+
+#asynchronously wait for change in uo_out[2] to go high 
+async def wait_for_load(dut):
+    while True:
+        await Edge(dut.uo_out)
+        print("Load signal", dut.uo_out[2].value)
+        print("Done signal", dut.uo_out[1].value)
+        print("RXD signal", dut.uo_out[0].value)
+        #now print the rest of the values
+        print("Rest of uo_out", dut.uo_out[3].value)
+        print("Rest of uo_out", dut.uo_out[4].value)
+        print("Rest of uo_out", dut.uo_out[5].value)
+        print("Rest of uo_out", dut.uo_out[6].value)
+        print("Rest of uo_out", dut.uo_out[7].value)
+        break
