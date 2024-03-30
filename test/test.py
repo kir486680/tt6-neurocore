@@ -38,17 +38,17 @@ async def test_neural_chip(dut):
 
     cocotb.start_soon(uart_receive(dut))
     cocotb.start_soon(wait_for_load(dut))
-
+    print("Multiply Done", dut.uo_out[1].value)
     # Send the initial start byte (0xFE)
     await send_bit(dut)
     await Timer(104.167, units='ns')
-    print(dut.uo_out[1].value)
+    print("Multiply Done", dut.uo_out[1].value)
     #assert dut.uo_out[1].value == 1
     await RisingEdge(dut.clk)
 
 async def send_bit(dut):
 
-    dut.ui_in[0].value = int(1)
+    dut.ui_in.value = 1
     print(f"Sending bit : {dut.ui_in[0].value}")
     await Timer(104.167, units='us')  # Delay for a little 
 
