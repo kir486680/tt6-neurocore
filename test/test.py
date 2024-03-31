@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, FallingEdge, Timer, Edge
+from cocotb.triggers import RisingEdge, ClockCycles, Timer, Edge
 import struct
 
 def float16_to_8bit_bytes(value):
@@ -24,8 +24,8 @@ def binary_strings_to_float16(high_byte_str, low_byte_str):
 
 @cocotb.test()
 async def test_neural_chip(dut):
-    clock_period = 83.33
-    clock = Clock(dut.clk, clock_period, units="ns")
+
+    clock = Clock(dut.clk, 10, units="us")
 
     cocotb.start_soon(clock.start())
 
@@ -40,7 +40,7 @@ async def test_neural_chip(dut):
     print("Multiply Done", dut.uo_out[1].value)
     # Send the initial start byte (0xFE)
     await send_bit(dut)
-    await Timer(104.167, units='ns')
+    await ClockCycles(dut.clk, 2)
     print("Multiply Done", dut.uo_out[1].value)
     #assert dut.uo_out[1].value == 1
     await RisingEdge(dut.clk)
@@ -49,7 +49,7 @@ async def send_bit(dut):
 
     dut.ui_in.value = 1
     print(f"Sending bit : {dut.ui_in[0].value}")
-    await Timer(104.167, units='us')  # Delay for a little 
+    await ClockCycles(dut.clk, 1)  # Delay for a little 
 
 
 async def wait_for_load(dut):
