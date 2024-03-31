@@ -9,3 +9,5 @@ test/sim_build
 test/__pycache__/
 test/results.xml
 test/gate_level_netlist.v
+#exclude src/neurocorev2.txt
+src/neurocorev2.txt
