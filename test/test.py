@@ -9,14 +9,19 @@ async def test_neural_chip(dut):
     clock = Clock(dut.clk, 10, units="us")
 
     cocotb.start_soon(clock.start())
-
+    cocotb.start_soon(wait_for_load(dut))
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
-    cocotb.start_soon(wait_for_load(dut))
+    
     print("Multiply Done", dut.uo_out[1].value)
     # Send the initial start byte (0xFE)
     await send_bit(dut)

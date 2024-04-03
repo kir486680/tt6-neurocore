@@ -10,13 +10,19 @@ module NeuralChip (
 
     //assign rx_data_test to a dummy wire 
     assign rx_data_test = 1;
+    reg [7:0] log_out;
+    assign logs = log_out;
     
-    //if rxd is high, assign all log bits to 1 on the rising edge of the clock
-    always @(posedge CLK) begin
-        if (RXD == 1) begin
-            logs <= 8;
-        end else begin
-            logs <= 5;
+    //if rxd is high, assign all log bits to 1
+    always @ (posedge CLK or negedge RESET)
+    begin
+        if (RESET == 0)
+        begin
+            log_out <= 4;
+        end
+        else if (RXD == 1)
+        begin
+            log_out <= 8;
         end
     end
 endmodule
