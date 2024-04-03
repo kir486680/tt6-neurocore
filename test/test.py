@@ -11,11 +11,7 @@ async def test_neural_chip(dut):
     cocotb.start_soon(clock.start())
     cocotb.start_soon(wait_for_load(dut))
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 5)
-    dut.rst_n.value = 1
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rst_n.value = 0
+    dut.ena.value = 1
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
     await RisingEdge(dut.clk)

@@ -5,7 +5,7 @@ project:
   discord:      "kkyrylo"      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "Systolic Array Multiplier"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
-  clock_hz:     10000000       # Clock frequency in Hz (or 0 if not applicable)
+  clock_hz:     20000000       # Clock frequency in Hz (or 0 if not applicable)
 
   how_it_works: "Magic"
   # How many tiles your design occupies? A single tile is about 167x108 uM.
