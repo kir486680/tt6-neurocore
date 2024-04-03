@@ -23,8 +23,8 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
         .CLK(clk),
         .RESET(rst_n),
         .RXD(uio_in[0]),
-        .logs(uo_out[7:0]),
-        .rx_data_test(uio_out)
+        .logs(uio_out),
+        .rx_data_test(uo_out[7:0])
     );
 
     // All output pins must be assigned. If not used, assign to 0.
