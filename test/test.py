@@ -27,8 +27,8 @@ async def test_neural_chip(dut):
 
 async def send_bit(dut):
 
-    dut.ui_in.value = 1
-    print(f"Sending bit : {dut.ui_in[0].value}")
+    dut.uio_in.value = 1
+    print(f"Sending bit : {dut.uio_in[0].value}")
     await ClockCycles(dut.clk, 1)  # Delay for a little 
 
 
