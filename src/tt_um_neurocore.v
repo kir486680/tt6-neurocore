@@ -2,6 +2,7 @@
 `include "define.v"
 `include "neurocore.v"
 
+
 module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
     input  wire [7:0] ui_in,    // Dedicated inputs
     output wire [7:0] uo_out,   // Dedicated outputs
@@ -14,6 +15,8 @@ module tt_um_neurocore #( parameter MAX_COUNT = 24'd10_000_000 ) (
 );
 
 
+// Hypothesis: the ports are not connected correctly. try different permutations of the io's and see if the testbench can drive the signals
+// Procedure: try uio_in and uio_out
 
 
     NeuralChip neural_chip_inst (
